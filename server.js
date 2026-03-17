@@ -25,7 +25,7 @@ app.use(express.static(path.join(__dirname,"public")));
 
 const viewsPath = path.join(__dirname,"views");
 
-mongoose.connect("mongodb+srv://neilrego3_db_user:1jaqQmuk7O5VCY5h@cluster0.mg1s55s.mongodb.net/courseRegSystem?retryWrites=true&w=majority")
+mongoose.connect(process.env.MONGO_URI)
 .then(()=>{
     console.log("MongoDB Connected");
 })
