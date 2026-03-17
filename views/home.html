@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+<div class="layout">
+
+<!-- Sidebar -->
+<div class="sidebar">
+<h2>University Portal</h2>
+
+<ul>
+<li><a href="/home">Dashboard</a></li>
+<li><a href="/courses">Courses</a></li>
+<li><a href="/my-courses">My Courses</a></li>
+<li onclick="logout()">Logout</li>
+</ul>
+</div>
+
+
+<!-- Main -->
+<div class="main">
+
+<div class="topbar">
+<div>Welcome back, <b id="username">Student</b></div>
+</div>
+
+
+<!-- Stats -->
+<div class="cards">
+
+<div class="card">
+<h3>Registered Courses</h3>
+<p id="registeredCoursesCount">0</p>
+</div>
+
+<div class="card">
+<h3>Total Credits</h3>
+<p id="totalCreditsCount">0</p>
+</div>
+
+</div>
+
+
+<!-- Available Courses -->
+<div class="table-container">
+
+<h3 style="margin-bottom:15px;">Available Courses</h3>
+
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Title</th>
+<th>Instructor</th>
+<th>Credits</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="coursesTableBody"></tbody>
+
+</table>
+
+</div>
+
+
+<br><br>
+
+
+<!-- MY COURSES -->
+<div class="table-container">
+
+<h3 style="margin-bottom:15px;">My Registered Courses</h3>
+
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Title</th>
+<th>Instructor</th>
+<th>Credits</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="myCoursesBody"></tbody>
+
+</table>
+
+</div>
+
+</div>
+</div>
+
+
+<script>
+
+let courses=[];
+let myCourses=[];
+
+
+/* ---------------- LOAD USER ---------------- */
+
+async function loadUser(){
+
+const res = await fetch("/api/user");
+
+if(res.ok){
+
+const user = await res.json();
+
+document.getElementById("username").innerText = user.username;
+
+}
+
+}
+
+
+/* ---------------- LOAD COURSES ---------------- */
+
+async function loadCourses(){
+
+const res = await fetch("/api/courses");
+
+courses = await res.json();
+
+const table = document.getElementById("coursesTableBody");
+
+table.innerHTML="";
+
+courses.forEach(course=>{
+
+const row = document.createElement("tr");
+
+row.innerHTML = `
+<td>${course.code}</td>
+<td>${course.title}</td>
+<td>${course.instructor}</td>
+<td>${course.credits}</td>
+<td>
+<button class="btn btn-success"
+onclick="registerCourse('${course._id}')">
+Register
+</button>
+</td>
+`;
+
+table.appendChild(row);
+
+});
+
+}
+
+
+/* ---------------- LOAD MY COURSES ---------------- */
+
+async function loadMyCourses(){
+
+const res = await fetch("/api/user/courses");
+
+myCourses = await res.json();
+
+const table = document.getElementById("myCoursesBody");
+
+table.innerHTML="";
+
+let credits=0;
+
+myCourses.forEach(course=>{
+
+credits += course.credits;
+
+const row = document.createElement("tr");
+
+row.innerHTML = `
+<td>${course.code}</td>
+<td>${course.title}</td>
+<td>${course.instructor}</td>
+<td>${course.credits}</td>
+<td>
+<button class="drop-btn" onclick="dropCourse('${course._id}')">
+Drop
+</button>
+</td>
+`;
+
+table.appendChild(row);
+
+});
+
+document.getElementById("registeredCoursesCount").innerText = myCourses.length;
+
+document.getElementById("totalCreditsCount").innerText = credits;
+
+}
+
+
+/* ---------------- REGISTER COURSE ---------------- */
+
+async function registerCourse(courseId){
+
+const response = await fetch("/api/courses/register",{
+
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+
+body: JSON.stringify({
+courseId
+})
+
+});
+
+const data = await response.json();
+
+if(response.ok){
+
+alert("Course Registered");
+
+loadMyCourses();
+
+}else{
+
+alert(data.error);
+
+}
+
+}
+
+
+/* ---------------- DROP COURSE ---------------- */
+
+async function dropCourse(courseId){
+
+const response = await fetch("/api/courses/drop/"+courseId,{
+method:"DELETE"
+});
+
+const data = await response.json();
+
+if(response.ok){
+
+alert("Course Dropped");
+
+loadMyCourses();
+
+}else{
+
+alert(data.error);
+
+}
+
+}
+
+
+/* ---------------- LOGOUT ---------------- */
+
+function logout(){
+window.location.href="/logout";
+}
+
+
+/* ---------------- INITIAL LOAD ---------------- */
+
+loadUser();
+loadCourses();
+loadMyCourses();
+
+</script>
+
+</body>
+</html>
